@@ -18,7 +18,7 @@
 <br />
 <p align="center">
   <a href="https://github.com/greydongilmore/ocr-pdf">
-    <img src="imgs/logo.png" alt="Logo">
+    <img src="imgs/logo.png" alt="Logo" width="30%">
   </a>
 
   <h3 align="center">edf epoch</h3>
