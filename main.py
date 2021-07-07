@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Jul  7 05:55:10 2021
+
+@author: greydon
+"""
+import os
+import pandas as pd
+import re
+from PyPDF2 import PdfFileReader
+import argparse
+import subprocess
+from pdfminer.pdfpage import PDFPage
+
+
+def sorted_nicely(data, reverse = False):
+	convert = lambda text: int(text) if text.isdigit() else text
+	alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
+	
+	return sorted(data, key = alphanum_key, reverse=reverse)
+
+def get_pdf_searchable_pages(fname):
+	searchable_pages = []
+	non_searchable_pages = []
+	page_num = 0
+	with open(fname, 'rb') as infile:
+
+		for page in PDFPage.get_pages(infile):
+			page_num += 1
+			if 'Font' in page.resources.keys():
+				searchable_pages.append(page_num)
+			else:
+				non_searchable_pages.append(page_num)
+	return searchable_pages,non_searchable_pages
+
+def run_command(cmdLineArguments):
+	process = subprocess.Popen(cmdLineArguments, stdout=subprocess.PIPE, shell=True, stderr=subprocess.PIPE)
+	stdout = process.communicate()[0]
+	p_status = process.wait()
+
+debug=False
+
+if debug:
+	class Namespace:
+		def __init__(self, **kwargs):
+			self.__dict__.update(kwargs)
+	
+	pdf_storage_path = r'/home/greydon/Zotero/storage'
+	args = Namespace(pdf_storage_path=pdf_storage_path)
+	
+def main(args):
+	folders = sorted_nicely([d for d in os.listdir(args.pdf_storage_path) if os.path.isdir(os.path.join(args.pdf_storage_path, d)) and not d.startswith('.')])
+	
+	file_info = {'title':[],'path':[],'num_pages':[],'searchable':[]}
+	cnt=1
+	for ifolder in folders:
+		
+		files = [d for d in os.listdir(os.path.join(args.pdf_storage_path, ifolder)) if os.path.isfile(os.path.join(args.pdf_storage_path, ifolder, d)) and d.endswith('.pdf')]
+		
+		for ifile in files:
+			try:
+				with open(os.path.join(args.pdf_storage_path, ifolder, ifile), 'rb') as f:
+					pdf = PdfFileReader(f)
+					info = pdf.getDocumentInfo()
+					number_of_pages = pdf.getNumPages()
+				
+				searchable,nonsearch=get_pdf_searchable_pages(os.path.join(args.pdf_storage_path, ifolder, ifile))
+				
+				file_info['title'].append(ifile.split('.pdf')[0].strip())
+				file_info['path'].append(os.path.join(args.pdf_storage_path, ifolder, ifile))
+				file_info['num_pages'].append(number_of_pages)
+				file_info['searchable'].append(True if len(searchable) > len(nonsearch) else False)
+			except:
+				file_info['title'].append(ifile.split('.pdf')[0].strip())
+				file_info['path'].append(os.path.join(args.pdf_storage_path, ifolder, ifile))
+				file_info['num_pages'].append('')
+				file_info['searchable'].append(False)
+		
+		print(f"Finished scanning {cnt} of {len(folders)}")
+		cnt+=1
+	
+	file_info=pd.DataFrame(file_info)
+	cnt=1
+	for index,row in file_info[file_info['searchable']==False].iterrows():
+		ocr_cmd=' '.join(['ocrmypdf',
+					  f"'{row['path']}'",
+					  f"'{row['path']}'"
+					  ])
+		run_command(ocr_cmd)
+		
+		print(f"Finished converting {cnt} of {len(file_info[file_info['searchable']==False])}: {os.path.basename(row['path'])}")
+		cnt+=1
+
+if __name__ == "__main__":
+	# Input arguments
+	parser = argparse.ArgumentParser()
+	parser.add_argument('-i', '--pdf_storage_path', help='Path to where Zotero stores PDF files.', required=True)
+	args = parser.parse_args()
+
+	main(args)
+	
