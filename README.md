@@ -82,7 +82,7 @@ To get a local copy up and running follow these simple steps.
 
 ### Prerequisites
 
-* No Prerequisites required. Any Python3 version will suffice.
+* Install <a href="https://ocrmypdf.readthedocs.io/en/latest/installation.html" target="_blank"><strong>OCRmyPDF</strong></a>
 
 ### Installation
 
