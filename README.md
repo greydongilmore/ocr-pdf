@@ -82,7 +82,7 @@ To get a local copy up and running follow these simple steps.
 
 ### Prerequisites
 
-* Install <a href="https://ocrmypdf.readthedocs.io/en/latest/installation.html" target="_blank"><strong>OCRmyPDF</strong></a>
+* Install <a href="https://ocrmypdf.readthedocs.io/en/latest/installation.html" target="blank_"><strong>OCRmyPDF</strong></a>
 
 ### Installation
 
