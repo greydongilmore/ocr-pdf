@@ -6,6 +6,7 @@ Created on Wed Jul  7 05:55:10 2021
 @author: greydon
 """
 import os
+import glob
 import pandas as pd
 import re
 from PyPDF2 import PdfFileReader
@@ -50,34 +51,30 @@ if debug:
 	args = Namespace(pdf_storage_path=pdf_storage_path)
 	
 def main(args):
-	folders = sorted_nicely([d for d in os.listdir(args.pdf_storage_path) if os.path.isdir(os.path.join(args.pdf_storage_path, d)) and not d.startswith('.')])
 	
 	file_info = {'title':[],'path':[],'num_pages':[],'searchable':[]}
 	cnt=1
-	for ifolder in folders:
-		
-		files = [d for d in os.listdir(os.path.join(args.pdf_storage_path, ifolder)) if os.path.isfile(os.path.join(args.pdf_storage_path, ifolder, d)) and d.endswith('.pdf')]
-		
-		for ifile in files:
-			try:
-				with open(os.path.join(args.pdf_storage_path, ifolder, ifile), 'rb') as f:
-					pdf = PdfFileReader(f)
-					info = pdf.getDocumentInfo()
-					number_of_pages = pdf.getNumPages()
-				
-				searchable,nonsearch=get_pdf_searchable_pages(os.path.join(args.pdf_storage_path, ifolder, ifile))
-				
-				file_info['title'].append(ifile.split('.pdf')[0].strip())
-				file_info['path'].append(os.path.join(args.pdf_storage_path, ifolder, ifile))
-				file_info['num_pages'].append(number_of_pages)
-				file_info['searchable'].append(True if len(searchable) > len(nonsearch) else False)
-			except:
-				file_info['title'].append(ifile.split('.pdf')[0].strip())
-				file_info['path'].append(os.path.join(args.pdf_storage_path, ifolder, ifile))
-				file_info['num_pages'].append('')
-				file_info['searchable'].append(False)
-		
-		print(f"Finished scanning {cnt} of {len(folders)}")
+	num_files=len(glob.glob(os.path.join(args.pdf_storage_path, '**','*.pdf'), recursive = True))
+	for ifile in glob.glob(os.path.join(args.pdf_storage_path, '**','*.pdf'), recursive = True):
+		try:
+			with open(ifile, 'rb') as f:
+				pdf = PdfFileReader(f)
+				info = pdf.getDocumentInfo()
+				number_of_pages = pdf.getNumPages()
+			
+			searchable,nonsearch=get_pdf_searchable_pages(ifile)
+			
+			file_info['title'].append(os.path.basename(ifile).split('.pdf')[0].strip())
+			file_info['path'].append(ifile)
+			file_info['num_pages'].append(number_of_pages)
+			file_info['searchable'].append(True if len(searchable) > len(nonsearch) else False)
+		except:
+			file_info['title'].append(os.path.basename(ifile).split('.pdf')[0].strip())
+			file_info['path'].append(ifile)
+			file_info['num_pages'].append('')
+			file_info['searchable'].append(False)
+	
+		print(f"Finished scanning {cnt} of {num_files}")
 		cnt+=1
 	
 	file_info=pd.DataFrame(file_info)
