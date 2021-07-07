@@ -21,10 +21,10 @@
     <img src="imgs/logo.png" alt="Logo" width="30%">
   </a>
 
-  <h3 align="center">edf epoch</h3>
+  <h3 align="center">OCR PDF</h3>
 
   <p align="center">
-    EDF+ epoch creation tool
+    PDF OCR conversion tool
     <br />
     <a href="https://github.com/greydongilmore/ocr-pdf"><strong>Explore the docs »</strong></a>
     <br />
