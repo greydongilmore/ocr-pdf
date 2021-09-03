@@ -67,8 +67,9 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-This code snippet will search a given directory for PDF files that are non-searchable and convert them to searchable PDFs (OCR).
+This code snippet will search a given directory for PDF files that are non-searchable and convert them to searchable PDFs (OCR). When you obtain manuscript PDF files from online databases, they may not be in a searchable format. This means you are unable to highlight and search for text within the PDF. This small Python function will recursively search though a directory containing PDF files, determine the PDF files that are non-searchable, and convert to a searchable format. Optical Character Recognition (OCR) is a method to enable text recognition within images and documents. PDFs contain vector graphics that can contain raster objects (.png, .jpg etc.). The OCR process will first rasterize each page of the PDF file then an OCR "layer" is created. 
 
+This python function wraps the command-line program <a href="https://ocrmypdf.readthedocs.io/en/latest/index.html" target="_blank"><strong>OCRmyPDF</strong></a>.
 
 ### Built With
 
