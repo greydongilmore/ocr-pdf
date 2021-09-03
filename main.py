@@ -52,28 +52,21 @@ if debug:
 	
 def main(args):
 	
-	file_info = {'title':[],'path':[],'num_pages':[],'searchable':[]}
+	file_info = {'title':[],'path':[],'searchable':[]}
 	cnt=1
 	num_files=len(glob.glob(os.path.join(args.pdf_storage_path, '**','*.pdf'), recursive = True))
 	for ifile in glob.glob(os.path.join(args.pdf_storage_path, '**','*.pdf'), recursive = True):
 		try:
-			with open(ifile, 'rb') as f:
-				pdf = PdfFileReader(f)
-				#info = pdf.getDocumentInfo()
-				number_of_pages = pdf.getNumPages()
-			
 			searchable,nonsearch=get_pdf_searchable_pages(ifile)
 			
 			file_info['title'].append(os.path.basename(ifile).split('.pdf')[0].strip())
 			file_info['path'].append(ifile)
-			file_info['num_pages'].append(number_of_pages)
 			file_info['searchable'].append(True if len(searchable) > len(nonsearch) else False)
 		except:
 			file_info['title'].append(os.path.basename(ifile).split('.pdf')[0].strip())
 			file_info['path'].append(ifile)
-			file_info['num_pages'].append('')
 			file_info['searchable'].append(False)
-	
+		
 		print(f"Finished scanning {cnt} of {num_files}")
 		cnt+=1
 	
