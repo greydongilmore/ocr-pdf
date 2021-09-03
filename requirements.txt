@@ -1,4 +1,3 @@
 argparse>=1.4.0
 pandas>=1.2.4
-PyPDF2>=1.26.0
 pdfminer>=20200726
