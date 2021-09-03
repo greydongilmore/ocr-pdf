@@ -9,7 +9,6 @@ import os
 import glob
 import pandas as pd
 import re
-from PyPDF2 import PdfFileReader
 import argparse
 import subprocess
 from pdfminer.pdfpage import PDFPage
