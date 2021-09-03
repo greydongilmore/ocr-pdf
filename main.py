@@ -59,7 +59,7 @@ def main(args):
 		try:
 			with open(ifile, 'rb') as f:
 				pdf = PdfFileReader(f)
-				info = pdf.getDocumentInfo()
+				#info = pdf.getDocumentInfo()
 				number_of_pages = pdf.getNumPages()
 			
 			searchable,nonsearch=get_pdf_searchable_pages(ifile)
