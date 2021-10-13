@@ -25,13 +25,19 @@ def get_pdf_searchable_pages(fname):
 	non_searchable_pages = []
 	page_num = 0
 	with open(fname, 'rb') as infile:
-
 		for page in PDFPage.get_pages(infile):
 			page_num += 1
+			
 			if 'Font' in page.resources.keys():
 				searchable_pages.append(page_num)
+			elif 'XObject' in page.resources.keys():
+				if any("im" in x.lower() for x in list(page.resources.get("XObject", {}))):
+					searchable_pages.append(page_num)
+				else:
+					non_searchable_pages.append(page_num)
 			else:
 				non_searchable_pages.append(page_num)
+	
 	return searchable_pages,non_searchable_pages
 
 def run_command(cmdLineArguments):
@@ -48,7 +54,7 @@ if debug:
 	
 	pdf_storage_path = r'/home/greydon/Zotero/storage'
 	args = Namespace(pdf_storage_path=pdf_storage_path)
-	
+
 def main(args):
 	
 	file_info = {'title':[],'path':[],'searchable':[]}
@@ -61,25 +67,34 @@ def main(args):
 			file_info['title'].append(os.path.basename(ifile).split('.pdf')[0].strip())
 			file_info['path'].append(ifile)
 			file_info['searchable'].append(True if len(searchable) > len(nonsearch) else False)
-		except:
+		except Exception as e:
+			print(e)
 			file_info['title'].append(os.path.basename(ifile).split('.pdf')[0].strip())
 			file_info['path'].append(ifile)
-			file_info['searchable'].append(False)
+			file_info['searchable'].append(True)
 		
 		print(f"Finished scanning {cnt} of {num_files}")
 		cnt+=1
 	
 	file_info=pd.DataFrame(file_info)
+	
+	print(f"\nFound {file_info[file_info['searchable']==False].shape[0]} PDF files to convert...\n")
+	
 	cnt=1
 	for index,row in file_info[file_info['searchable']==False].iterrows():
+		
+		print(f"Converting {cnt} of {len(file_info[file_info['searchable']==False])}: {os.path.basename(row['path'])}")
+		
 		ocr_cmd=' '.join(['ocrmypdf',
 					  f"'{row['path']}'",
 					  f"'{row['path']}'"
 					  ])
+		
 		run_command(ocr_cmd)
 		
-		print(f"Finished converting {cnt} of {len(file_info[file_info['searchable']==False])}: {os.path.basename(row['path'])}")
 		cnt+=1
+	
+	print('Finished converting all PDF files in directory.')
 
 if __name__ == "__main__":
 	# Input arguments
