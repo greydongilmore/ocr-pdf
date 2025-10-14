@@ -11,8 +11,9 @@ import pandas as pd
 import re
 import argparse
 import subprocess
-from pdfminer.pdfpage import PDFPage
-
+import pdfplumber
+from pdfplumber.utils.pdfinternals import resolve_and_decode, resolve
+from pathlib import Path
 
 def sorted_nicely(data, reverse = False):
 	convert = lambda text: int(text) if text.isdigit() else text
@@ -24,14 +25,13 @@ def get_pdf_searchable_pages(fname):
 	searchable_pages = []
 	non_searchable_pages = []
 	page_num = 0
-	with open(fname, 'rb') as infile:
-		for page in PDFPage.get_pages(infile):
+	with pdfplumber.open(fname) as infile:
+		for page in infile.pages:
 			page_num += 1
-			
-			if 'Font' in page.resources.keys():
+			if 'Font' in page.page_obj.resources.keys():
 				searchable_pages.append(page_num)
-			elif 'XObject' in page.resources.keys():
-				if any("im" in x.lower() for x in list(page.resources.get("XObject", {}))):
+			elif 'XObject' in page.page_obj.resources.keys():
+				if any("im" in x.lower() for x in list(resolve(page.page_obj.resources.get("XObject", {})))):
 					searchable_pages.append(page_num)
 				else:
 					non_searchable_pages.append(page_num)
@@ -45,6 +45,8 @@ def run_command(cmdLineArguments):
 	stdout = process.communicate()[0]
 	p_status = process.wait()
 
+#%%
+
 debug=False
 
 if debug:
@@ -57,21 +59,22 @@ if debug:
 
 def main(args):
 	
-	file_info = {'title':[],'path':[],'searchable':[]}
+	file_info = []
 	cnt=1
 	num_files=len(glob.glob(os.path.join(args.pdf_storage_path, '**','*.pdf'), recursive = True))
 	for ifile in glob.glob(os.path.join(args.pdf_storage_path, '**','*.pdf'), recursive = True):
 		try:
 			searchable,nonsearch=get_pdf_searchable_pages(ifile)
-			
-			file_info['title'].append(os.path.basename(ifile).split('.pdf')[0].strip())
-			file_info['path'].append(ifile)
-			file_info['searchable'].append(True if len(searchable) > len(nonsearch) else False)
+			searchable=True if len(searchable) > len(nonsearch) else False
 		except Exception as e:
-			print(e)
-			file_info['title'].append(os.path.basename(ifile).split('.pdf')[0].strip())
-			file_info['path'].append(ifile)
-			file_info['searchable'].append(True)
+			print(f"{ifile}\n{e}")
+			searchable=False
+		
+		file_info_tmp={}
+		file_info_tmp['title']=os.path.basename(ifile).split('.pdf')[0].strip()
+		file_info_tmp['path']=ifile
+		file_info_tmp['searchable']=searchable
+		file_info.append(file_info_tmp)
 		
 		print(f"Finished scanning {cnt} of {num_files}")
 		cnt+=1
@@ -84,12 +87,12 @@ def main(args):
 	for index,row in file_info[file_info['searchable']==False].iterrows():
 		
 		print(f"Converting {cnt} of {len(file_info[file_info['searchable']==False])}: {os.path.basename(row['path'])}")
-		
+		out_fname=z = f'"{row["path"].split(".pdf")[0]+"_.pdf"}"'
 		ocr_cmd=' '.join(['ocrmypdf',
-					  f"'{row['path']}'",
-					  f"'{row['path']}'"
+					"--force-ocr --deskew --clean --output-type pdf",
+					 f'"{row["path"]}"',
+					 out_fname
 					  ])
-		
 		run_command(ocr_cmd)
 		
 		cnt+=1
