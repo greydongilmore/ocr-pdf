@@ -87,12 +87,13 @@ def main(args):
 	for index,row in file_info[file_info['searchable']==False].iterrows():
 		
 		print(f"Converting {cnt} of {len(file_info[file_info['searchable']==False])}: {os.path.basename(row['path'])}")
-		out_fname=z = f'"{row["path"].split(".pdf")[0]+"_.pdf"}"'
+		
 		ocr_cmd=' '.join(['ocrmypdf',
 					"--force-ocr --deskew --clean --output-type pdf",
 					 f'"{row["path"]}"',
-					 out_fname
+					 f'"{row["path"]}"'
 					  ])
+		
 		run_command(ocr_cmd)
 		
 		cnt+=1
